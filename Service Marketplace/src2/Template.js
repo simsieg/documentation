@@ -7,5 +7,7 @@ exports.fillTemplate = function (values) {
         html += `<p>${prop}</p>`;
     });
 
+    html += `<br><input type="button" onclick="closeWindow()" value="${values.closeLabel}" />`;
+
     return html;
 }

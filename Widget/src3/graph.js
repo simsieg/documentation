@@ -1,3 +1,7 @@
+// there is in principle no need for this function
+// also a plain text could be read from a file using
+// the Node.js file read APIs
+
 exports.graph = function graph() {
   return `
 Test Widget<br>

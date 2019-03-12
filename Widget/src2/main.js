@@ -1,11 +1,12 @@
-exports.main = function main(params) {
+exports.main = function main(call) {
   console.log('widget service started');
-  const { lang = 'en' } = params.params;
+  const { params: { lang = 'en' } } = call;
 
-  if (params.inter === 'Widget') {
+  if (call.inter === 'Widget') {
     let html, subTitle;
 
-    if (params.func === 'start') {
+    // first call: func is "start"
+    if (call.func === 'start') {
       if (lang === 'de') {
         subTitle = 'Mein zweites Widget';
         html = 'Hallo Welt! Das ist mein zweites Widget.<br>';
@@ -20,13 +21,14 @@ exports.main = function main(params) {
         html += '<input type="button" onclick="sendInputs()" value="Go" />';
       }
     } else {
-      // params.func === 'interact'
+      // call.func === 'interact'
+      // after submitting the inputs
       if (lang === 'de') {
         subTitle = 'Mein zweites Widget';
-        html = `Sei gegrüßt, ${params.params.inputs.name}`;
+        html = `Sei gegrüßt, ${call.params.inputs.name}`;
       } else {
         subTitle = 'My second Widget';
-        html = `Hello ${params.params.inputs.name}`;
+        html = `Hello ${call.params.inputs.name}`;
       }
     }
 
@@ -34,7 +36,7 @@ exports.main = function main(params) {
 
   }
 
-  if (params.inter === 'ServiceMarketplace') {
+  if (call.inter === 'ServiceMarketplace') {
     let html, title;
     if (lang === 'de') {
       title = 'Mein zweiter Widget';

@@ -2,10 +2,12 @@
 const mydaco = require('mydaco');
 const { fillTemplate } = require('./Template.js');
 
-exports.main = async function main(params) {
-  const { lang = 'en' } = params.params;
+exports.main = async function main(call) {
+
+  const { params: { lang = 'en' } } = call
   let title;
   let text;
+
   // retrieve all devices in account
   const devices = await getMyDevices();
   if (lang === 'de') {
@@ -21,15 +23,13 @@ exports.main = async function main(params) {
   };
 }
 
-//get all devices in the user's account
+// get all devices in the user's account
 async function getMyDevices() {
-  //First retrieve providers
-  const providerRAW = await mydaco.interface('IotCore', 'provider', {});
-  if (providerRAW.length === 0)
-    return [];
-  const providers = providerRAW.map(p => p.provider);
-  //Second retrieve devices based on the provider list
-  const devices = await mydaco.interface('IotCore', 'devices', { providers });
-  const deviceInformation = devices.map(device => `${device.provider} - ${device.name}`);
+  // first retrieve providers
+  const devices = await mydaco.interface('IotCore', 'devices', {});
+  // the devices could be directly filtered by "types" "properties" and/or "events"
+  console.log(devices);
+
+  const deviceInformation = devices.map(device => `${device.name} - ${device.metadata.types.join(', ')}`);
   return deviceInformation;
 }
