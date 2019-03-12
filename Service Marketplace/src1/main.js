@@ -1,7 +1,9 @@
-exports.main = function main(params) {
+// the main function will be called
+exports.main = function main(call) {
 
-  // retrieve language form parameters
-  const { lang = 'en' } = params.params;
+  // retrieve language from parameters
+  const { params: { lang = 'en' } } = call;
+
   let title;
   let html;
 
@@ -14,5 +16,6 @@ exports.main = function main(params) {
     html = 'Hello World! This is my first Service for the Service Marketplace.';
   }
 
+  // we return html and title since this is needed for the ServiceMarketplace interface
   return { html, title };
 }

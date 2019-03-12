@@ -1,28 +1,87 @@
 
 const mydaco = require('mydaco');
 
-exports.main = async function main(params) {
-  const { lang = 'en' } = params.params;
-  let title;
-  let text;
-  // retrieve all devices in account
-  const devices = await getPowerDevices();
-  if (lang === 'de') {
-    title = 'Mein zweiter Geräte Service mit Stromgeräten';
-    text = 'Das sind deine Geräte:';
-  } else {
-    title = 'My second device service with powerdevices';
-    text = 'You have these devices:';
+exports.main = async function main(call) {
+  if (call.inter === 'ServiceMarketplace') {
+    if (call.func === 'start') {
+      return await first(call.params);
+    }
+    if (call.func === 'interact') {
+      return await second(call.params);
+    }
   }
-  const html = text + JSON.stringify(devices);
+  if (call.inter === 'IotCore') {
+    buttonEvent();
+  }
+}
+
+async function first(params) {
+  const { lang = 'en' } = params;
+
+  // retrieve all devices in account
+  const devices = await getLampsAndButtons();
+
+  if (lang === 'de') {
+    title = 'Mein zweiter Geräte Service mit speziellen Geräten';
+    text = 'Das sind deine Lampen:';
+  } else {
+    title = 'My second device service with featured devices';
+    text = 'You have these lamps:';
+  }
+
+  let html = 'Lamps<br>';
+  for (const lamp of devices.lamps) {
+    html += `<input type="radio" name="lampId" value="${lamp.id}" required> ${lamp.name}<br>`;
+  }
+
+  html += 'Buttons<br>';
+  for (const button of devices.buttons) {
+    html += `<input type="radio" name="buttonId" value="${button.id}" required> ${button.name}<br>`;
+  }
+
+  html += `<input type="button" onclick="sendInputs()" value="OK" />`;
   return { title, html };
 }
 
-//get all powerdevices in the user's account
-async function getPowerDevices() {
+async function buttonEvent() {
+  const value = Math.round(Math.random() * 256 * 256 * 256);
+  const hexString = value.toString(16);
 
-  const data = await mydaco.interface('IotCore', 'powerDevices', {});
+  const storage = await mydaco.interface('KeyValueStore', 'get', { key: 'lampId' });
 
-  const deviceInformation = data.devices.map(device => `${device.name} - ${device.friendlyName}`);
-  return deviceInformation;
+  if (storage.key) {
+    const device = storage.value;
+    const data = await mydaco.interface('IotCore', 'actuate', { device, property: 'color', value: hexString });
+  }
+  return {};
+}
+
+async function second(params) {
+  const { buttonId, lampId } = params.inputs;
+  if (!buttonId || !lampId) {
+    return { html: 'Please select a proper device.' }
+  }
+  const message = await deleteOldTasks();
+
+  const data = await mydaco.interface('IotCore', 'createEvent', { event: 'click', device: buttonId });
+  const storageLamp = await mydaco.interface('KeyValueStore', 'put', { key: 'lampId', value: lampId });
+
+  return { html: `The service is configured. Deleted ${message.length} old events.` };
+}
+
+// get all devices in the user's account
+async function getLampsAndButtons() {
+  const devices = await mydaco.interface('IotCore', 'devices', { types: ['lamp', 'button'] });
+  const lamps = devices.filter(device => device.metadata.types.includes('lamp'));
+  const buttons = devices.filter(device => device.metadata.types.includes('button'));
+  return { lamps, buttons };
+}
+
+
+async function deleteOldTasks() {
+  const events = await mydaco.interface('IotCore', 'listEvents', {});
+  for (const event of events) {
+    await mydaco.interface('IotCore', 'deleteEvent', { task: event.task });
+  }
+  return events;
 }

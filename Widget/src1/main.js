@@ -1,8 +1,10 @@
-exports.main = function main(params) {
+exports.main = function main(call) {
   console.log('widget service started');
-  const { lang = 'en' } = params.params;
+  const { params: { lang = 'en' } } = call;
 
-  if (params.inter === 'Widget') {
+  // call.inter contains the name of the interface
+  // that triggered this execution
+  if (call.inter === 'Widget') {
     let html, subTitle;
     if (lang === 'de') {
       subTitle = 'Mein erstes Widget';
@@ -12,11 +14,14 @@ exports.main = function main(params) {
       html = 'Hello World! This is my first Widget.';
     }
 
+    // return for the Widget interface is html and subTitle
     return { html, subTitle };
 
   }
 
-  if (params.inter === 'ServiceMarketplace') {
+  // the ServiceMarketplace interface is still needed
+  // to activate the widget
+  if (call.inter === 'ServiceMarketplace') {
     let html, title;
     if (lang === 'de') {
       title = 'Mein erster Service';

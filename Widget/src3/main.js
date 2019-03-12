@@ -1,10 +1,12 @@
+// the source code for the d3.js example
+// is placed in a seperate file graph.js
 const { graph } = require('./graph.js');
 
-exports.main = function main(params) {
+exports.main = function main(call) {
   console.log('widget service started');
-  const { lang = 'en' } = params.params;
+  const { params: { lang = 'en' } } = call;
 
-  if (params.inter === 'Widget') {
+  if (call.inter === 'Widget') {
     let subTitle;
 
     if (lang === 'de') {
@@ -13,13 +15,14 @@ exports.main = function main(params) {
       subTitle = 'My third Widget';
     }
 
+    // just display the graph example
     const html = graph();
 
     return { html, subTitle };
 
   }
 
-  if (params.inter === 'ServiceMarketplace') {
+  if (call.inter === 'ServiceMarketplace') {
     let html, title;
     if (lang === 'de') {
       title = 'Mein drittes Widget';

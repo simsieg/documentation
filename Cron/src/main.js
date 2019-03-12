@@ -1,56 +1,86 @@
 
-//import intefaces in mydaco
+//import interfaces in mydaco
 const mydaco = require('mydaco');
-const { mailEN } = require('./mailTemplates');
 
-exports.main = async function (params) {
-    if (params.inter === 'Cron') {
-        return await handleCron();
-    }
-    return await handleInit(params);
+exports.main = async function (call) {
+  if (call.inter === 'Cron') {
+    return await handleCron();
+  }
+  return await handleInit(call.params);
 }
 
 async function handleInit(params) {
-    const { lang = 'en' } = params.params;
-    let title;
-    let html;
-    const cronPatterns = ['* * * * *'];
-    if (lang === 'de') {
-        title = 'Mein Cron Service';
-        try {
-            await setCron(cronPatterns);
-            html = 'Hallo Welt! Das ist mein Cron Service. Du erhältst bald eine Mail per Cron Job.';
-        } catch (error) {
-            html = 'Hallo Welt! Das ist mein Cron Service. Leider ging etwas schief.';
-        }
-    } else {
-        title = 'My Mail Service';
-        try {
-            await setCron(cronPatterns);
-            html = 'Hello World! This is my cron service. You receive a mail schedeluded by a cron job soon';
-        } catch (error) {
-            html = 'Hello World! This is my cron service. Unfortunately, something went wrong.';
-        }
+  const { lang = 'en' } = params;
+  let title;
+  let html;
+
+  const number = await getNumber();
+
+  // cron pattern for every minute
+  const cronPatterns = ['* * * * *'];
+
+  if (lang === 'de') {
+    title = 'Mein Cron Service';
+    try {
+      await setCron(cronPatterns);
+      html = `Hallo Welt! Das ist mein Cron Service. Die aktuelle Nummer ist: <b>${number}</b>. Der Counter wird nun zurückgesetzt.`;
+    } catch (error) {
+      html = 'Hallo Welt! Das ist mein Cron Service. Leider ging etwas schief.';
     }
-    return { html, title, lang };
+  } else {
+    title = 'My Cron Service';
+    try {
+      await setCron(cronPatterns);
+      html = `Hello World! This is my cron service. The current number is<b>${number}</b>. The counter will be resetted.`;
+    } catch (error) {
+      html = 'Hello World! This is my cron service. Unfortunately, something went wrong.';
+    }
+  }
+
+  // reset
+  await setNumber(0);
+
+  return { html, title, lang };
 }
 
 async function handleCron() {
+  const number = await getNumber();
+  if (number >= 5) {
+    // stop cron if number too high
     const cronPatterns = [];
     await setCron(cronPatterns);
-    const subject = 'Mail From Cron Service';
-    const text = 'This is a mail form your Cron service.';
-    await sendMail(subject, text, mailEN);
-    return {};
+  } else {
+    await setNumber(number + 1);
+  }
+  return {};
 }
 
 function setCron(cronPatterns) {
-    // send cron patterns. This service is automatically called based on them.
-    return mydaco.interface('Cron', 'put', { cronPatterns });
+  // send cron patterns. This service is automatically called based on them.
+  return mydaco.interface('Cron', 'put', { cronPatterns });
 }
 
-function sendMail(subject, text, html) {
-    const parameters = { subject, text, html };
-    // send a mail using the mydaco inteface 'mail'
-    return mydaco.interface('Mail', 'sendMail', parameters);
+// function to get the number from the KeyValueStore
+async function getNumber() {
+  const parameters = {
+    key: 'cronNumber'
+  };
+  try {
+    const result = await mydaco.interface('KeyValueStore', 'get', parameters);
+    if (typeof result.value === 'number') {
+      // result.value hold the value saved to the KeyValueStore
+      return result.value;
+    }
+    // ignore errors (e.g. first call)
+  } catch (error) { }
+  return 0;
+}
+
+// save the number using the key: cronNumber
+async function setNumber(number) {
+  const parameters = {
+    key: 'cronNumber',
+    value: number
+  }
+  return await mydaco.interface('KeyValueStore', 'put', parameters);
 }

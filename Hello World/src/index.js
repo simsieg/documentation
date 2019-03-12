@@ -1,6 +1,6 @@
 
 // Call with {"name": "World"}
-exports.main = function (params) {
-    const message = `Hello ${params.params.name}!`;
+exports.main = function (call) {
+    const message = `Hello ${call.params.name}!`;
     return { message };
 }
