@@ -1,17 +1,15 @@
-
-// import interfaces into the constant "mydaco"
+// Import mydaco interfaces
 const mydaco = require('mydaco');
 
 exports.main = async function main(call) {
-
-  // retrieve language form parameters
+  // Retrieve language from parameters
   const { params: { lang = 'en' } } = call;
   let title;
   let html;
 
   const number = await getNumber();
 
-  //Choose title and body (html) based on the language of the user.
+  // Choose title and body (html) based on the language of the user.
   if (lang === 'de') {
     title = 'Mein Key Value Service';
     html = `Hallo Welt! Immer wenn ich diesen Service aufrufe, erhöht sich die Zahl um 1: <b>${number}</b>`;
@@ -25,26 +23,26 @@ exports.main = async function main(call) {
   return { html, title };
 }
 
-// function to get the number from the KeyValueStore
+// Get the number from the KeyValueStore
 async function getNumber() {
   const parameters = {
-    key: 'mynumber'
+    key: 'myNumber'
   };
   try {
     const result = await mydaco.interface('KeyValueStore', 'get', parameters);
     if (typeof result.value === 'number') {
-      // result.value hold the value saved to the KeyValueStore
+      // result.value holds the value saved to the KeyValueStore
       return result.value;
     }
-    // ignore errors (e.g. first call)
+    // Ignore errors (e.g. first call)
   } catch (error) { }
   return 0;
 }
 
-// save the number using the key: mynumber
+// Save the number using the key 'myNumber'
 async function setNumber(number) {
   const parameters = {
-    key: 'mynumber',
+    key: 'myNumber',
     value: number
   }
   return await mydaco.interface('KeyValueStore', 'put', parameters);
